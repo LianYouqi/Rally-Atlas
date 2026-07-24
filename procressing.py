@@ -28,7 +28,6 @@ translation = {
 }
 
 #Accumulators
-overall_shot_counts = {shot: 0 for shot in translation.values()}
 overall_forehand_counts = {shot: 0 for shot in translation.values()}
 overall_backhand_counts = {shot: 0 for shot in translation.values()}
 
@@ -40,7 +39,6 @@ def shot_identification(df: pd.DataFrame):
     '''Counts the various shot types
     
     returns:
-        shot_counts(list): The number of shots played without the account of forehand or backhand
         forehand_shot_counts(list): The number of different shots played on the forehand side
         backhand_shot_counts(list): Shots played on the backhand side
     '''
@@ -60,16 +58,25 @@ def shot_identification(df: pd.DataFrame):
         else:
             forehand_shot_counts[shot_type] += 1
 
-    shot_counts = {
-        key: forehand_shot_counts[key] + backhand_shot_counts[key] for key in forehand_shot_counts
-    }
+    return forehand_shot_counts, backhand_shot_counts
 
-    return shot_counts, forehand_shot_counts, backhand_shot_counts
+def csv_generation(forehand_shot_counts: dict, backhand_shot_counts: dict) -> pd.DataFrame:
+    rows = []
 
-def csv_generation()
+    for shot in forehand_shot_counts:
+        forehand = forehand_shot_counts[shot]
+        backhand = backhand_shot_counts[shot]
+
+        rows.append({
+            'shot type': shot,
+            'forehand (count)': forehand,
+            'backhand (count)': backhand,
+            'total': forehand + backhand
+        })
+    df = pd.DataFrame(rows)
+    return df.set_index('shot type')
+
 # Main Code
-
-
 for i in test_male_files:
     df = pd.read_csv(i) 
     df = df[['type', 'backhand']] #Selecting only 'shot type' and 'backhand' columns
@@ -78,32 +85,13 @@ for i in test_male_files:
     df['type'] = df['type'].replace(translation)
     df['backhand'] = df['backhand'].fillna(0).astype(bool)
 
-    shot_counts, forehand_shot_counts, backhand_shot_counts = shot_identification(df)
+    forehand_shot_counts, backhand_shot_counts = shot_identification(df)
 
-    for i in shot_counts:
-        overall_shot_counts[i] += shot_counts[i]
     for i in forehand_shot_counts:
         overall_forehand_counts[i] += forehand_shot_counts[i]
     for i in backhand_shot_counts:
         overall_backhand_counts[i] += backhand_shot_counts[i]
 
+df = csv_generation(forehand_shot_counts, backhand_shot_counts)
 
-overall_shot_counts = pd.DataFrame(
-    overall_shot_counts.items(),
-    columns= ['shot type', 'count']
-    )
-
-overall_backhand_counts = pd.DataFrame(
-    overall_backhand_counts.items(),
-    columns= ['shot type (backhand)', 'count']
-)
-
-overall_forehand_counts = pd.DataFrame(
-    overall_forehand_counts.items(),
-    columns= ['shot type (forehand)', 'count']
-)
-
-
-print(overall_shot_counts)
-print(overall_backhand_counts)
-print(overall_forehand_counts)
+print(df.to_string())
