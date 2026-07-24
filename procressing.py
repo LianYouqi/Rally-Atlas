@@ -27,8 +27,6 @@ translation = {
     '發長球': 'long service',
     '未知球種': 'unnamed shot'
 }
-#Test Data smaller sample size
-test_male_files = glob.glob('./test_data/test_male/**/*.csv', recursive=True)
 
 def data_cleaning(df: pd.DataFrame) -> pd.DataFrame:
     ''''''
@@ -64,6 +62,7 @@ def shot_identification(df: pd.DataFrame):
     return forehand_shot_counts, backhand_shot_counts
 
 def csv_generation(forehand_shot_counts: dict, backhand_shot_counts: dict) -> pd.DataFrame:
+    ''''''
     rows = []
     total = 0 
 
@@ -93,18 +92,32 @@ def csv_generation(forehand_shot_counts: dict, backhand_shot_counts: dict) -> pd
     df = pd.DataFrame(rows).set_index('shot type')
 
     print(df.to_string())
-    # Test
-    # try:
-    #     df.to_csv('processed_test')
-    #     print("CSV file 'processed_test' created successfully.")
-    # except Exception as e:
-    #     print(f"Error saving CSV: {e}")
+
+    try:
+        df.to_csv('Badminton Shot Distribution (Female)')
+        print("CSV file created successfully.")
+    except Exception as e:
+        print(f"Error saving CSV: {e}")
+
+    return df
 
 # Main Code
+# option = input(
+#     'Which group of raw csv files would you like to process?\n' \
+#     '1. Elite male badminton althetes\n' \
+#     '2. Elite female badminton althetes\n' \
+#     'Enter number: '
+# )
+
+# if option == 1:
+#     option = male_files
+# if option == 2:
+#     option = female_files
+
 overall_forehand_counts = {shot: 0 for shot in translation.values()}
 overall_backhand_counts = {shot: 0 for shot in translation.values()}
 
-for _ in female_files:
+for _ in female_files: 
     df = pd.read_csv(_) 
 
     df = data_cleaning(df)
