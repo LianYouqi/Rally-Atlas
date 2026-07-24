@@ -3,8 +3,8 @@ import os
 import glob
 
 # Actual list of badminton data
-# male_files = glob.glob("./raw_data/male/**/*.csv", recursive=True)
-# female_files = glob.glob("./raw_data/female/**/*.csv", recursive=True)
+male_files = glob.glob("./raw_data/male/**/*.csv", recursive=True)
+female_files = glob.glob("./raw_data/female/**/*.csv", recursive=True)
 
 translation = {
     '放小球': 'net shot',
@@ -24,16 +24,19 @@ translation = {
     '防守回抽': 'defensive return drive',
     '勾球': 'cross-court net shot',
     '發短球': 'short service',
-    '發長球': 'long service'
+    '發長球': 'long service',
+    '未知球種': 'unnamed shot'
 }
-
-#Accumulators
-overall_forehand_counts = {shot: 0 for shot in translation.values()}
-overall_backhand_counts = {shot: 0 for shot in translation.values()}
-
-
 #Test Data smaller sample size
 test_male_files = glob.glob('./test_data/test_male/**/*.csv', recursive=True)
+
+def data_cleaning(df: pd.DataFrame) -> pd.DataFrame:
+    ''''''
+    df = df[['type', 'backhand']] 
+    df['type'] = df['type'].replace(translation)
+    df['backhand'] = df['backhand'].fillna(0).astype(bool)
+
+    return df
 
 def shot_identification(df: pd.DataFrame):
     '''Counts the various shot types
@@ -73,18 +76,24 @@ def csv_generation(forehand_shot_counts: dict, backhand_shot_counts: dict) -> pd
             'backhand (count)': backhand,
             'total': forehand + backhand
         })
-    df = pd.DataFrame(rows)
-    return df.set_index('shot type')
+    df = pd.DataFrame(rows).set_index('shot type')
+
+    print(df.to_string())
+    # Test
+    # try:
+    #     df.to_csv('processed_test')
+    #     print("CSV file 'processed_test' created successfully.")
+    # except Exception as e:
+    #     print(f"Error saving CSV: {e}")
 
 # Main Code
+overall_forehand_counts = {shot: 0 for shot in translation.values()}
+overall_backhand_counts = {shot: 0 for shot in translation.values()}
+
 for i in test_male_files:
     df = pd.read_csv(i) 
-    df = df[['type', 'backhand']] #Selecting only 'shot type' and 'backhand' columns
 
-    #Data cleaning
-    df['type'] = df['type'].replace(translation)
-    df['backhand'] = df['backhand'].fillna(0).astype(bool)
-
+    df = data_cleaning(df)
     forehand_shot_counts, backhand_shot_counts = shot_identification(df)
 
     for i in forehand_shot_counts:
@@ -92,6 +101,5 @@ for i in test_male_files:
     for i in backhand_shot_counts:
         overall_backhand_counts[i] += backhand_shot_counts[i]
 
-df = csv_generation(forehand_shot_counts, backhand_shot_counts)
 
-print(df.to_string())
+csv_generation(overall_forehand_counts, overall_backhand_counts)
