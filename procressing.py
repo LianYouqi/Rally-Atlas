@@ -65,16 +65,30 @@ def shot_identification(df: pd.DataFrame):
 
 def csv_generation(forehand_shot_counts: dict, backhand_shot_counts: dict) -> pd.DataFrame:
     rows = []
+    total = 0 
+
+    for shot in forehand_shot_counts:
+        forehand = forehand_shot_counts[shot]
+        backhand = backhand_shot_counts[shot]
+        total += forehand + backhand
 
     for shot in forehand_shot_counts:
         forehand = forehand_shot_counts[shot]
         backhand = backhand_shot_counts[shot]
 
+        shot_total = forehand + backhand
+
         rows.append({
             'shot type': shot,
-            'forehand (count)': forehand,
-            'backhand (count)': backhand,
-            'total': forehand + backhand
+            'count': shot_total,
+            '(%) of all shots': shot_total/total if total else 0,
+
+            'FH (count)': forehand,
+            'FH usage (%)': forehand/shot_total if shot_total else 0,
+
+            'BH (count)': backhand,
+            'BH usage (%)': backhand/shot_total if shot_total else 0,
+
         })
     df = pd.DataFrame(rows).set_index('shot type')
 
@@ -90,8 +104,8 @@ def csv_generation(forehand_shot_counts: dict, backhand_shot_counts: dict) -> pd
 overall_forehand_counts = {shot: 0 for shot in translation.values()}
 overall_backhand_counts = {shot: 0 for shot in translation.values()}
 
-for i in test_male_files:
-    df = pd.read_csv(i) 
+for _ in female_files:
+    df = pd.read_csv(_) 
 
     df = data_cleaning(df)
     forehand_shot_counts, backhand_shot_counts = shot_identification(df)
