@@ -1,4 +1,4 @@
-shot type,count,(%) of all shots,FH (count),FH usage (%),BH (count),BH usage (%)
+shot type,count,overall frequency,forehand (count),forehand ratio (%),backhand (count),backhand ratio (%)
 net shot,948,0.13372831146847228,465,0.49050632911392406,483,0.509493670886076
 return net,639,0.09013965298349556,264,0.4131455399061033,375,0.5868544600938967
 smash,594,0.0837917900973339,593,0.9983164983164983,1,0.0016835016835016834

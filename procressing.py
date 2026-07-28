@@ -113,18 +113,18 @@ def csv_generation(forehand_shot_counts: dict, backhand_shot_counts: dict, outpu
         rows.append({
             'shot type': shot,
             'count': shot_total,
-            '(%) of all shots': shot_total/total if total else 0,
+            'overall frequency': shot_total/total if total else 0,
 
-            'FH (count)': forehand,
-            'FH usage (%)': forehand/shot_total if shot_total else 0,
+            'forehand (count)': forehand,
+            'forehand ratio (%)': forehand/shot_total if shot_total else 0,
 
-            'BH (count)': backhand,
-            'BH usage (%)': backhand/shot_total if shot_total else 0,
+            'backhand (count)': backhand,
+            'backhand ratio (%)': backhand/shot_total if shot_total else 0,
         })
     df = pd.DataFrame(rows).set_index('shot type')
 
     try:
-        df.to_csv(output_path_name)
+        df.to_csv(f'processed_data/{output_path_name}')
         print("CSV file created successfully.")
     except Exception as e:
         print(f"Error saving CSV: {e}")
