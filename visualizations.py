@@ -62,11 +62,14 @@ def plot_elite_distribution(df: pd.DataFrame, gender: str, statistic: tuple[str,
     Returns:
         None
     """
+    data_one = df[statistic[0]].sort_values(ascending=True)
+    data_two = df[statistic[1]].sort_values(ascending=True)
 
-    figure, axes = plt.subplot(2,1)
-    #Top Plot
+    figure, axes = plt.subplots(2,1, figsize=(8,8))
 
-    #Bottom Plot
+    axes[0].barh(data_one.index, data_one)
+    axes[1].barh(data_two.index, data_two)
+
     plt.tight_layout()
     plt.show()
 
@@ -80,6 +83,10 @@ def plot_personal_vs_elite(personal_df: pd.DataFrame, elite_df: pd.DataFrame) ->
 
 
 #Prompts the user to display which kind of statistic to be plotted.
+#[[[CURRENT PROBLEMS:
+#   1. THE ORDER IN WHICH THE PROMPTS ARE ASKED ARE IN THE WRONG ORDER ==> DOES NOT WORK IF USER PICKS 3RD PLOT
+#      BETTER STRUCTURE IS REQUIRED WHEN plot_personal_vs_elite FUNCTION IS COMPLETED
+#   2. MISSING DEFAULT CASES FOR match 'statistics' AND 'which_distribution']]]
 prompt_one = (
     "Which of the following distributions would you like to plot?\n"
     "1. Different shot distributions of elite badminton players.\n"
@@ -123,10 +130,8 @@ match which_distribution:
         df = male_df if gender == 'male' else female_df
 
         plot_elite_distribution(df, gender, statistic)
-
     case '2':
-        # plot_gender_comparison(male_df, female_df, statistic)
+        plot_gender_comparison(male_df, female_df, statistic)
 
     case '3':
-        # plot_personal_vs_elite()
-        pass
+        plot_personal_vs_elite()
