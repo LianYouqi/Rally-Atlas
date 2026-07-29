@@ -21,7 +21,7 @@ Using the [ShuttleSet dataset](https://github.com/wywyWang/CoachAI-Projects/tree
 
 ```
 badminton-shot-statistics/
-├── data/
+├── processed_data/
 │   └── processed/                  # Generated output files
 ├── raw_data/                       # ShuttleSet CSV files (not included — see Data Setup)
 │   ├── male/
