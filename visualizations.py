@@ -4,27 +4,13 @@ import pandas as pd
 
 # [[[Data and Statistics]]]
 male_df   = pd.read_csv('processed_data/Badminton Shot Distribution (Male)',   index_col='shot type')
-male_shot_types = male_df.index
-# male_shot_count = male_df['count'].sort_values(ascending=True)
-# male_overall_freq = male_df['overall frequency'].sort_values(ascending=True)
-# male_forehand_count = male_df['forehand (count)'].sort_values(ascending=True)
-# male_forehand_ratio = male_df['forehand ratio (%)'].sort_values(ascending=True)
-# male_backhand_count = male_df['backhand (count)'].sort_values(ascending=True)
-# male_backhand_ratio = male_df['backhand ratio (%)'].sort_values(ascending=True)
-
 female_df = pd.read_csv('processed_data/Badminton Shot Distribution (Female)', index_col='shot type')
-female_shot_types = female_df.index
-# female_shot_count = female_df['count'].sort_values(ascending=True)
-# female_overall_freq = female_df['overall frequency'].sort_values(ascending=True)
-# female_forehand_count = female_df['forehand (count)'].sort_values(ascending=True)
-# female_forehand_ratio = female_df['forehand ratio (%)'].sort_values(ascending=True)
-# female_backhand_count = female_df['backhand (count)'].sort_values(ascending=True)
-# female_backhand_ratio = female_df['backhand ratio (%)'].sort_values(ascending=True)
+personal_df = None
 
 # ── Palette ───────────────────────────────────────────────────────────────────
 COURT_TEAL  = '#1B998B'
 SMASH_RED   = '#E84855'
-BACKGROUND  = '#0F1923'   # dark court-floor tone
+BACKGROUND  = '#0F1923'
 SURFACE     = '#1C2B36'
 TEXT        = '#E8EDF2'
 GRID        = '#2A3F4E'
@@ -37,41 +23,73 @@ BAR_CUSTOMIZATIONS = {
     'height':    0.65,
 }
 
-AXIS_CUSTOMIZATIONS = {
-
-}
-# # Prototype
-# plt.barh(male_shot_count.index, male_shot_count,**BAR_CUSTOMIZATIONS)
-# plt.tight_layout()
-# plt.xlabel('Total Shots')
-# plt.ylabel('Shot Type')
-# plt.show()
-
-def plot_elite_distribution(df: pd.DataFrame, gender: str, statistic: tuple[str,str]) -> tuple[plt.Figure, plt.Axes]:
-    """View 1: single gender elite distribution
-    
-    Parameters:
-        df: Processed DataFrame from processing.py.
-            Must contain columns 'count', 'overall frequency', 'forehand (count)',
-            'forehand ratio (%)', 'backhand (count)', 'backhand ratio (%)'
-        gender: Used to label the chart title. 
-                Valid input are 'male' and 'female'
-        statistic: Column name determing which metric to plot.
-                   Valid values: 'count', 'overall frequency', 'forehand (count)',
-                   'forehand ratio (%)', 'backhand (count)', 'backhand ratio (%)'
-    Returns:
-        None
+def plot_elite_distribution(df: pd.DataFrame, gender: str, statistic: tuple[str, str]) -> tuple[plt.Figure, plt.Axes]:
     """
-    data_one = df[statistic[0]].sort_values(ascending=True)
-    data_two = df[statistic[1]].sort_values(ascending=True)
+    View 1: single gender elite distribution of a particular statistic
 
-    figure, axes = plt.subplots(2,1, figsize=(8,8))
+    Parameters:
+        df: Processed DataFrame. Must contain the chosen metric column
+            and 'overall frequency' (for annotation).
+        gender: 'male' or 'female' – used in the chart title.
+        statistic: Tuple of two column names; only the first is used as the metric to plot.
+                   Valid metric names: 'count', 'overall frequency', 'forehand (count)',
+                   'forehand ratio (%)', 'backhand (count)', 'backhand ratio (%)'
 
-    axes[0].barh(data_one.index, data_one)
-    axes[1].barh(data_two.index, data_two)
+    Returns:
+        fig, ax: Matplotlib figure and axes objects.
+    """
+    STAT_LABELS = {
+    ('count', 'overall frequency'): 'shot types',
+    ('forehand (count)', 'forehand ratio (%)'): 'forehand plays',
+    ('backhand (count)', 'backhand ratio (%)'): 'backhand plays',
+    }
+    metric = statistic[0]  
+
+    df_sorted = df.sort_values(by=metric, ascending=True)
+
+    # Figure and Plot customizations
+    fig, ax = plt.subplots(figsize=(10, 8))
+    fig.patch.set_facecolor(BACKGROUND)   
+    ax.set_facecolor(SURFACE)             
+
+    #Horizontal bar graph
+    bars = ax.barh(df_sorted.index, df_sorted[metric], **BAR_CUSTOMIZATIONS)
+
+    max_val = df_sorted[metric].max()
+
+    # Annotate each bar with the count and overall frequency percentage
+    bars[-1].set_color(SMASH_RED)
+    for bar, (idx, row) in zip(bars, df_sorted.iterrows()):
+        width = bar.get_width()
+        freq_percent = row['overall frequency'] * 100   
+
+        ax.text(
+            width + max_val * 0.01,                     
+            bar.get_y() + bar.get_height() / 2,
+            f'{int(width):,}  ({freq_percent:.1f}%)',
+            va='center', ha='left',
+            fontsize=8, color=TEXT
+        )
+
+    # Styling axes
+    ax.tick_params(colors=TEXT, labelsize=9)
+    ax.xaxis.label.set_color(TEXT)
+    ax.yaxis.label.set_color(TEXT)
+    ax.title.set_color(TEXT)
+    ax.spines['bottom'].set_color(GRID)
+    ax.spines['top'].set_color(GRID)
+    ax.spines['left'].set_color(GRID)
+    ax.spines['right'].set_color(GRID)
+    ax.grid(axis='x', color=GRID, linestyle='--', linewidth=0.5)
+
+    # Titles and labels
+    ax.set_title(f'Distribution of {STAT_LABELS[statistic]} among elite {gender} singles players', fontsize=14)
+    ax.set_xlabel(metric, fontsize=12)
+    ax.set_ylabel('Shot type', fontsize=12)  
 
     plt.tight_layout()
     plt.show()
+    return fig, ax
 
 def plot_gender_comparison(male_df: pd.DataFrame, female_df: pd.DataFrame, statistics: tuple[str,str]) -> tuple[plt.Figure, plt.Axes]:
     pass
@@ -84,7 +102,7 @@ def plot_personal_vs_elite(personal_df: pd.DataFrame, elite_df: pd.DataFrame) ->
 
 #Prompts the user to display which kind of statistic to be plotted.
 #[[[CURRENT PROBLEMS:
-#   1. THE ORDER IN WHICH THE PROMPTS ARE ASKED ARE IN THE WRONG ORDER ==> DOES NOT WORK IF USER PICKS 3RD PLOT
+#   1. THE ORDER IN WHICH THE PROMPTS ARE ASKED ARE IN THE WRONG ORDER ==> DOES NOT WORK IF USER PICKS 3RD OPTION.
 #      BETTER STRUCTURE IS REQUIRED WHEN plot_personal_vs_elite FUNCTION IS COMPLETED
 #   2. MISSING DEFAULT CASES FOR match 'statistics' AND 'which_distribution']]]
 prompt_one = (
