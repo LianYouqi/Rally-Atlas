@@ -52,9 +52,7 @@ def plot_elite_distribution(df: pd.DataFrame, gender: str, statistic: tuple[str,
     fig.patch.set_facecolor(BACKGROUND)   
     ax.set_facecolor(SURFACE)             
 
-    #Horizontal bar graph
     bars = ax.barh(df_sorted.index, df_sorted[metric], **BAR_CUSTOMIZATIONS)
-
     max_val = df_sorted[metric].max()
 
     # Annotate each bar with the count and overall frequency percentage
@@ -91,8 +89,72 @@ def plot_elite_distribution(df: pd.DataFrame, gender: str, statistic: tuple[str,
     plt.show()
     return fig, ax
 
-def plot_gender_comparison(male_df: pd.DataFrame, female_df: pd.DataFrame, statistics: tuple[str,str]) -> tuple[plt.Figure, plt.Axes]:
-    pass
+def plot_gender_comparison(male_df: pd.DataFrame, female_df: pd.DataFrame, statistic: tuple[str,str]) -> tuple[plt.Figure, plt.Axes]:
+    """
+    View 2: Distributions of both elite male and female single players for comparsion of a particular statistic
+
+    Parameters:
+        male_df: Processed DataFrame. Must contain the chosen metric column
+                 and its relative frequency for (annotation)
+        female_df: Processed DataFrame. Must contain the chosen metric column
+                   and its relative frequency for (annotation)
+        statistic: Tuple of two column names; only the first is used as the metric to plot.
+                   Valid metric names: 'count', 'overall frequency', 'forehand (count)',
+                   'forehand ratio (%)', 'backhand (count)', 'backhand ratio (%)'
+    
+    Returns:
+        fig, ax: Matplotlib figure and axes objects.
+    """
+    STAT_LABELS = {
+        ('count', 'overall frequency'): 'shot types',
+        ('forehand (count)', 'forehand ratio (%)'): 'forehand plays',
+        ('backhand (count)', 'backhand ratio (%)'): 'backhand plays',
+        }
+    
+    metric = statistic[0]
+    male_df_sorted = male_df.sort_values(by=metric, ascending=True)
+    female_df_sorted = female_df.sort_values(by=metric, ascending= True)
+
+    fig, axes = plt.subplots(2,1, figsize= (12,10))
+    fig.patch.set_facecolor(BACKGROUND)
+
+    def _draw_subplot(ax: plt.axes, df_sorted: pd.DataFrame, subtitle: str) -> None:
+        ax.set_facecolor(SURFACE)
+        bars = ax.barh(df_sorted.index, df_sorted[metric], **BAR_CUSTOMIZATIONS)
+
+        local_max = df_sorted[metric].max()
+
+        for bar, (idx, row) in zip(bars, df_sorted.iterrows()):
+            width = bar.get_width()
+            freq_percent = row['overall frequency'] * 100
+
+            ax.text(
+                width + local_max * 0.01,
+                bar.get_y() + bar.get_height() / 2,
+                f'{int(width):,}  ({freq_percent:.1f}%)',
+                va='center', ha='left',
+                fontsize=8, color=TEXT
+            )
+
+        ax.tick_params(colors=TEXT, labelsize=9)
+        ax.xaxis.label.set_color(TEXT)
+        ax.yaxis.label.set_color(TEXT)
+        ax.title.set_color(TEXT)
+        for spine in ax.spines.values():
+            spine.set_color(GRID)
+        ax.grid(axis='x', color=GRID, linestyle='--', linewidth=0.5)
+        ax.set_title(subtitle, fontsize=12)
+        ax.set_ylabel('Shot type', fontsize=11)
+
+    _draw_subplot(axes[0], male_df_sorted, 'Male')
+    _draw_subplot(axes[1], female_df_sorted, 'Female')
+
+    axes[1].set_xlabel(metric, fontsize=12)
+    fig.suptitle(f'Distribution of {STAT_LABELS[statistic]}: Male vs Female singles players', fontsize=14, color=TEXT)
+
+    plt.tight_layout()
+    plt.show()
+    return fig, axes
 
 # To Be Continued in the Future
 def plot_personal_vs_elite(personal_df: pd.DataFrame, elite_df: pd.DataFrame) -> tuple[plt.Figure, plt.Axes]:
