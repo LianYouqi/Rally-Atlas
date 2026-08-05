@@ -167,35 +167,33 @@ def plot_personal_vs_elite(personal_df: pd.DataFrame, elite_df: pd.DataFrame) ->
 #   1. THE ORDER IN WHICH THE PROMPTS ARE ASKED ARE IN THE WRONG ORDER ==> DOES NOT WORK IF USER PICKS 3RD OPTION.
 #      BETTER STRUCTURE IS REQUIRED WHEN plot_personal_vs_elite FUNCTION IS COMPLETED
 #   2. MISSING DEFAULT CASES FOR match 'statistics' AND 'which_distribution']]]
+
+# Statistics - Distribution 
+# if User picks second distribution - gender prompt is not nesscary
+
 prompt_one = (
-    "Which of the following distributions would you like to plot?\n"
-    "1. Different shot distributions of elite badminton players.\n"
-    "2. Comparison of shot distributions among elite male and female badminton players.\n"
-    "3. Personal comparison of shot distribution (To be Continued)\n"
-)
-prompt_two = (
     "Which of the following statistics would you like to analyze?\n"
     "1. Shot Count / Overall Frequency\n"
     "2. Forehand Count / Forehand Ratio\n"
     "3. Backhand Count / Backhand Ratio\n"
 )
+
+prompt_two = (
+    "Which of the following distributions would you like to plot?\n"
+    "1. Different shot distributions of elite badminton players.\n"
+    "2. Comparison of shot distributions among elite male and female badminton players.\n"
+    "3. Personal comparison of shot distribution (To be Continued)\n"
+)
+
 prompt_gender = (
     "Which gender?\n" 
     "1. male\n"
     "2. female\n"
 )
 
-which_distribution = input(f'{prompt_one}Enter Choice: ')
-statistic = input(f'{prompt_two}Enter Choice:')
-gender = input(f'{prompt_gender}Enter Choice: ')
+statistic = input(f'{prompt_one}Enter Choice:')
+which_distribution = input(f'{prompt_two}Enter Choice: ')
 
-match gender:
-    case '1':
-        gender = 'male'
-    case '2':
-        gender = 'female'
-    case _:
-        raise ValueError('Data is only available for the following genders: male and female')
 
 match statistic:
     case '1':
@@ -204,14 +202,36 @@ match statistic:
         statistic = ('forehand (count)', 'forehand ratio (%)')
     case '3':
         statistic = ('backhand (count)', 'backhand ratio (%)')
+    case _:
+        raise ValueError(f'Invalid Option')
+
 
 match which_distribution:
     case '1':
-        df = male_df if gender == 'male' else female_df
-
+        gender = input(f'{prompt_gender}Enter Choice: ')
+        if gender == '1':
+            gender = 'male'
+            df = male_df
+        elif gender == '2':
+            gender = 'female'
+            df = female_df
+        else:
+            raise ValueError('Data is only available for the following genders: male and female')
         plot_elite_distribution(df, gender, statistic)
     case '2':
         plot_gender_comparison(male_df, female_df, statistic)
 
     case '3':
+        gender = input(f'{prompt_gender}Enter Choice: ')
+        if gender == '1':
+            gender = 'male'
+            df = male_df
+        elif gender == '2':
+            gender = 'female'
+            df = female_df
+        else:
+            raise ValueError('Data is only available for the following genders: male and female')
         plot_personal_vs_elite()
+
+    case _:
+        raise ValueError(f'Invalid Option')
