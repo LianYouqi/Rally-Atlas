@@ -161,16 +161,6 @@ def plot_personal_vs_elite(personal_df: pd.DataFrame, elite_df: pd.DataFrame) ->
     pass
 
 
-
-#Prompts the user to display which kind of statistic to be plotted.
-#[[[CURRENT PROBLEMS:
-#   1. THE ORDER IN WHICH THE PROMPTS ARE ASKED ARE IN THE WRONG ORDER ==> DOES NOT WORK IF USER PICKS 3RD OPTION.
-#      BETTER STRUCTURE IS REQUIRED WHEN plot_personal_vs_elite FUNCTION IS COMPLETED
-#   2. MISSING DEFAULT CASES FOR match 'statistics' AND 'which_distribution']]]
-
-# Statistics - Distribution 
-# if User picks second distribution - gender prompt is not nesscary
-
 prompt_one = (
     "Which of the following statistics would you like to analyze?\n"
     "1. Shot Count / Overall Frequency\n"
@@ -192,9 +182,6 @@ prompt_gender = (
 )
 
 statistic = input(f'{prompt_one}Enter Choice:')
-which_distribution = input(f'{prompt_two}Enter Choice: ')
-
-
 match statistic:
     case '1':
         statistic = ('count', 'overall frequency')
@@ -205,7 +192,7 @@ match statistic:
     case _:
         raise ValueError(f'Invalid Option')
 
-
+which_distribution = input(f'{prompt_two}Enter Choice: ')
 match which_distribution:
     case '1':
         gender = input(f'{prompt_gender}Enter Choice: ')

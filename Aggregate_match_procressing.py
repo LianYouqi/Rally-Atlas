@@ -1,5 +1,4 @@
 import pandas as pd
-import os
 import glob
 
 male_files = glob.glob("./raw_data/male/**/*.csv", recursive=True)
