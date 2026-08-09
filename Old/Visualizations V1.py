@@ -1,10 +1,9 @@
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
 import pandas as pd
 
 # [[[Data and Statistics]]]
-male_df   = pd.read_csv('processed_data/Badminton Shot Distribution (Male)',   index_col='shot type')
-female_df = pd.read_csv('processed_data/Badminton Shot Distribution (Female)', index_col='shot type')
+male_df   = pd.read_csv('processed_data V1/Badminton Shot Distribution (Male)',   index_col='shot type')
+female_df = pd.read_csv('processed_data V1/Badminton Shot Distribution (Female)', index_col='shot type')
 personal_df = None
 
 # ── Palette ───────────────────────────────────────────────────────────────────
