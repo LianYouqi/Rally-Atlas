@@ -9,23 +9,24 @@ test_sample = male_files[0]
 female_files = glob.glob("./raw_data/female/**/*.csv", recursive=True)
 
 # Maps Chinese shot type labels from ShuttleSet to English equivalents
+#[[[]]]
 translation = {
     '放小球': 'net shot',
-    '擋小球': 'net shot',
+    '擋小球': 'return net',
     '殺球': 'smash',
-    '點扣': 'smash',
+    '點扣': 'wrist smash',
     '挑球': 'lift',
-    '防守回挑': 'lift',
+    '防守回挑': 'defensive return lob',
     '長球': 'clear',
     '平球': 'drive',
-    '小平球': 'drive',
-    '後場抽平球': 'drive',
+    '小平球': 'driven flight',
+    '後場抽平球': 'back-court drive',
     '切球': 'drop',
-    '過度切球': 'drop',
+    '過度切球': 'passive drop',
     '推球': 'push',
-    '撲球': 'push',
-    '防守回抽': 'drive',
-    '勾球': 'net shot',
+    '撲球': 'rush',
+    '防守回抽': 'defensive return drive',
+    '勾球': 'cross-court net shot',
     '發短球': 'short service',
     '發長球': 'long service',
     '未知球種': 'unnamed shot'
@@ -157,7 +158,7 @@ def csv_generation(output_path_name: str, forehand_counts: dict, backhand_counts
     print(df.to_string())
 
     try:
-        df.to_csv(f'processed_data V2/{output_path_name} {win_lose}')
+        df.to_csv(f'processed_data V2/{output_path_name}_{win_lose}')
         print("CSV file created successfully.")
     except Exception as e:
         print(f"Error saving CSV: {e}")
@@ -174,10 +175,10 @@ output_path_name = None
 
 if gender.lower() == 'male':
     gender = male_files
-    output_path_name = 'Badminton Shot Distribution (Male)'
+    output_path_name = 'male'
 elif gender.lower() == 'female':
     gender = female_files
-    output_path_name = 'Badminton Shot Distribution (Female)'
+    output_path_name = 'female'
 else:
     raise ValueError(f'gender must be either male or female, got {gender}')
 
