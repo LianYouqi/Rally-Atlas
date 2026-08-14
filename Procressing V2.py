@@ -1,16 +1,18 @@
-import pandas as pd
-import glob as glob
+"""
+Analyzes shot-type distributions (count, frequency, forehand/backhand ratio)
+for elite male and female singles badminton players from ShuttleSet match data.
+"""
+
+import argparse
+from pathlib import Path
 
 import pandas as pd
-import glob
 
-male_files = glob.glob("./raw_data/male/**/*.csv", recursive=True)
-test_sample = male_files[0]
-female_files = glob.glob("./raw_data/female/**/*.csv", recursive=True)
+RAW_DATA_DIR = Path("raw_data")
+OUTPUT_DIR = Path("processed_data_v2")
 
 # Maps Chinese shot type labels from ShuttleSet to English equivalents
-#[[[]]]
-translation = {
+TRANSLATION = {
     '放小球': 'net shot',
     '擋小球': 'return net',
     '殺球': 'smash',
@@ -29,189 +31,166 @@ translation = {
     '勾球': 'cross-court net shot',
     '發短球': 'short service',
     '發長球': 'long service',
-    '未知球種': 'unnamed shot'
+    '未知球種': 'unnamed shot',
 }
 
-def data_cleaning(df: pd.DataFrame) -> pd.DataFrame:
-    """Filters, translates, and formats raw match data for analysis
+WIN_LOSE = {'A': 'Winner', 'B': 'Loser'}
 
-    Keeps only the 'type' and 'back' columns, translates shot type labels
-    from Chinese to English using the TRANSLATION dictionary and converts
-    the 'backhand' column from numeric (0/1) to boolean
+
+def data_cleaning(df: pd.DataFrame) -> pd.DataFrame:
+    """Filters, translates, and formats raw match data for analysis.
+
+    Keeps only the 'player', 'type', and 'backhand' columns, translates shot
+    type labels from Chinese to English using TRANSLATION, maps player codes
+    to 'Winner'/'Loser', and converts the 'backhand' column from numeric
+    (0/1) to boolean.
 
     Parameters:
-        df: Raw match DataFrame laoded from the ShuttleSet CSV files.
-            Must contain 'type' and 'backhand' columns
-    
+        df: Raw match DataFrame loaded from the ShuttleSet CSV files.
+            Must contain 'player', 'type', and 'backhand' columns.
+
     Returns:
-        df: Cleaned DataFrame with two columns:
+        Cleaned DataFrame with columns:
+            - 'player' (str): 'Winner' or 'Loser'
             - 'type' (str): English shot type label
-            - 'backhand' (bool): True if the shot was played on the 
-               backhand side, False otherwise.  
+            - 'backhand' (bool): True if the shot was played on the
+              backhand side, False otherwise.
     """
-    win_lose = {
-        'A': 'Winner',
-        'B': 'Loser'
-    }
-    df = df[['player', 'type', 'backhand']] 
-    df['player'] = df['player'].replace(win_lose)
-    df['type'] = df['type'].replace(translation)
+    df = df[['player', 'type', 'backhand']].copy()
+    df['player'] = df['player'].replace(WIN_LOSE)
+    df['type'] = df['type'].replace(TRANSLATION)
     df['backhand'] = df['backhand'].fillna(0).astype(bool)
 
     return df
 
-def shot_identification(df: pd.DataFrame) -> dict:
-    """Counts the occurances of each type of badminton shot by forehand and backhand and categorizing 
-    them by player's result after the match (win/lose)
+
+def shot_identification(df: pd.DataFrame) -> tuple[dict, dict, dict, dict]:
+    """Counts occurrences of each shot type by forehand/backhand, split by
+    whether the player went on to win or lose the match.
 
     Parameters:
-        df: Cleaned DataFrame from data_cleaning function.
-            Must contain 'player' (str), 'type' (str), and 'backhand' (bool) columns
-    
+        df: Cleaned DataFrame from data_cleaning().
+            Must contain 'player' (str), 'type' (str), and 'backhand' (bool)
+            columns.
+
     Returns:
-        player_A_forehand_shot_counts: Dictionary mapping each shot type (str) to its forehand count (int)
-        player_A_backhand_shot_counts: Dictionary mapping each shot type (str) to its backhand count (int)
-        player_B_forehand_shot_counts: Dictionary mapping each shot type (str) to its forehand count (int)
-        player_B_backhand_shot_counts: Dictionary mapping each shot type (str) to its backhand count (int)
+        A 4-tuple of dicts (shot type -> count):
+            (winner_forehand_counts, winner_backhand_counts,
+             loser_forehand_counts, loser_backhand_counts)
     """
-    # Initialization of the return variables
-    all_shots = translation.values()
+    counts = {
+        ('Winner', False): {shot: 0 for shot in TRANSLATION.values()},
+        ('Winner', True): {shot: 0 for shot in TRANSLATION.values()},
+        ('Loser', False): {shot: 0 for shot in TRANSLATION.values()},
+        ('Loser', True): {shot: 0 for shot in TRANSLATION.values()},
+    }
 
-    player_A_forehand_shot_counts = {shot: 0 for shot in all_shots}
-    player_A_backhand_shot_counts = {shot: 0 for shot in all_shots}
-    player_B_forehand_shot_counts = {shot: 0 for shot in all_shots}
-    player_B_backhand_shot_counts = {shot: 0 for shot in all_shots}
+    # value_counts on a groupby is much faster than iterrows() for this kind
+    # of tally, since it avoids the per-row Python-level loop.
+    tally = df.groupby(['player', 'backhand'])['type'].value_counts()
 
-    #Sorting
-    for index, row in df.iterrows():
-        shot_type = row['type']
-        is_backhand = row['backhand']
-        player = row['player']
-
-        match player:
-            case 'Winner':
-                if is_backhand:
-                    player_A_backhand_shot_counts[shot_type] += 1
-                else:
-                    player_A_forehand_shot_counts[shot_type] += 1
-
-            case 'Loser':
-                if is_backhand:
-                    player_B_backhand_shot_counts[shot_type] += 1
-                else:
-                    player_B_forehand_shot_counts[shot_type] += 1
-
-            case _:
-                continue
+    for (player, is_backhand, shot_type), n in tally.items():
+        if player not in ('Winner', 'Loser'):
+            continue
+        counts[(player, is_backhand)][shot_type] = int(n)
 
     return (
-        player_A_forehand_shot_counts,
-        player_A_backhand_shot_counts,
-        player_B_forehand_shot_counts,
-        player_B_backhand_shot_counts
+        counts[('Winner', False)],
+        counts[('Winner', True)],
+        counts[('Loser', False)],
+        counts[('Loser', True)],
     )
 
-def csv_generation(output_path_name: str, forehand_counts: dict, backhand_counts: dict, win_lose: str) -> None:
-    """Ultizes the dictionary maping of each shot type from shot_identification function and generates
-       a clean, processed Panda's DataFrame containing statistics for further research purposes.
+
+def csv_generation(output_stem: str, forehand_counts: dict, backhand_counts: dict, win_lose: str) -> None:
+    """Builds a summary DataFrame from shot-count dictionaries and writes it
+    to CSV for further research use.
 
     Parameters:
-        output_path_name: The name of the CSV file
-        forehand_counts: Dictionary mapping of shot type (str) and its forehand count (int).
-                              Generated from shot_idenitifcation function.
-        backhand_counts: Dictionary mapping of shot type (str) and its backhand count (int).
-                              Generated from shot_idenitifcation function.
-        win_lose: Which CSV file does it belong to: Winner/Loser
+        output_stem: Base name for the output file (e.g. 'male', 'female').
+        forehand_counts: Dict mapping shot type (str) -> forehand count (int),
+            from shot_identification().
+        backhand_counts: Dict mapping shot type (str) -> backhand count (int),
+            from shot_identification().
+        win_lose: 'win' or 'lose' — which group this summary covers.
 
     Returns:
-        None: Results are saved to a CSV file at the specified output_path_name
+        None. Results are written to OUTPUT_DIR / f'{output_stem}_{win_lose}.csv'.
     """
+    total = sum(forehand_counts[shot] + backhand_counts[shot] for shot in forehand_counts)
+
     rows = []
-    total = 0 
-
-    # Calculates grand total for pecentage computation
     for shot in forehand_counts:
         forehand = forehand_counts[shot]
         backhand = backhand_counts[shot]
-        total += forehand + backhand
-
-    # Constructing rows using percentages conditioned to the grand total
-    for shot in forehand_counts:
-        forehand = forehand_counts[shot]
-        backhand = backhand_counts[shot]
-
         shot_total = forehand + backhand
 
         rows.append({
             'shot type': shot,
             'count': shot_total,
-            'overall frequency': shot_total/total if total else 0,
+            'overall frequency (%)': 100 * shot_total / total if total else 0,
 
             'forehand (count)': forehand,
-            'forehand ratio (%)': forehand/shot_total if shot_total else 0,
+            'forehand ratio (%)': 100 * forehand / shot_total if shot_total else 0,
 
             'backhand (count)': backhand,
-            'backhand ratio (%)': backhand/shot_total if shot_total else 0,
+            'backhand ratio (%)': 100 * backhand / shot_total if shot_total else 0,
         })
-    df = pd.DataFrame(rows).set_index('shot type')
 
-    print(df.to_string())
+    summary = pd.DataFrame(rows).set_index('shot type')
+    print(summary.to_string())
 
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = OUTPUT_DIR / f'{output_stem}_{win_lose}.csv'
     try:
-        df.to_csv(f'processed_data V2/{output_path_name}_{win_lose}')
-        print("CSV file created successfully.")
-    except Exception as e:
+        summary.to_csv(out_path)
+        print(f"CSV file saved to {out_path}")
+    except OSError as e:
         print(f"Error saving CSV: {e}")
 
-# Main Code
-# Prompt user to select gender group
-gender = input(
-    "Which dataset group of professional singles badminton player would you like to process?\n" \
-    "For 'Professional Male Badminton Althetes', type 'male'\n" \
-    "For 'Professional Female Badminton Althetes', type 'female'\n" \
-    ":  "
+
+def process_group(files: list[str], output_stem: str) -> None:
+    """Aggregates shot counts across all match CSVs for one gender group and
+    writes winner/loser summary CSVs."""
+    winner_forehand = {shot: 0 for shot in TRANSLATION.values()}
+    winner_backhand = {shot: 0 for shot in TRANSLATION.values()}
+    loser_forehand = {shot: 0 for shot in TRANSLATION.values()}
+    loser_backhand = {shot: 0 for shot in TRANSLATION.values()}
+
+    for file in files:
+        df = data_cleaning(pd.read_csv(file))
+        wf, wb, lf, lb = shot_identification(df)
+
+        for shot in wf:
+            winner_forehand[shot] += wf[shot]
+            winner_backhand[shot] += wb[shot]
+            loser_forehand[shot] += lf[shot]
+            loser_backhand[shot] += lb[shot]
+
+    csv_generation(output_stem, winner_forehand, winner_backhand, 'win')
+    csv_generation(output_stem, loser_forehand, loser_backhand, 'lose')
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Summarize badminton shot-type distributions by gender.")
+    parser.add_argument(
+        'gender',
+        nargs='?',
+        choices=['male', 'female'],
+        help="Which player group to process. If omitted, you'll be prompted.",
     )
-output_path_name = None
+    args = parser.parse_args()
 
-if gender.lower() == 'male':
-    gender = male_files
-    output_path_name = 'male'
-elif gender.lower() == 'female':
-    gender = female_files
-    output_path_name = 'female'
-else:
-    raise ValueError(f'gender must be either male or female, got {gender}')
+    gender = args.gender
+    while gender not in ('male', 'female'):
+        gender = input("Process 'male' or 'female' player data? ").strip().lower()
 
-overall_winner_forehand_counts = {shot: 0 for shot in translation.values()}
-overall_winner_backhand_counts = {shot: 0 for shot in translation.values()}
-overall_loser_forehand_counts = {shot: 0 for shot in translation.values()}
-overall_loser_backhand_counts = {shot: 0 for shot in translation.values()}
+    files = sorted((RAW_DATA_DIR / gender).glob("**/*.csv"))
+    if not files:
+        raise FileNotFoundError(f"No CSV files found under {RAW_DATA_DIR / gender}")
 
-# Aggregate shot counts across all match (CSV) files
-for file in gender: 
-    df = pd.read_csv(file) 
+    process_group([str(f) for f in files], gender)
 
-    df = data_cleaning(df)
-    winner_forehand_counts, winner_backhand_counts, loser_forehand_counts, loser_backhand_counts = shot_identification(df)
 
-    for i in winner_forehand_counts:
-        overall_winner_forehand_counts[i] += winner_forehand_counts[i]
-    for i in winner_backhand_counts:
-        overall_winner_backhand_counts[i] += winner_backhand_counts[i]
-    for i in loser_forehand_counts:
-        overall_loser_forehand_counts[i] += loser_forehand_counts[i]
-    for i in loser_backhand_counts:
-        overall_loser_backhand_counts[i] += loser_backhand_counts[i]
-
-csv_generation(
-    output_path_name,
-    overall_winner_forehand_counts,
-    overall_winner_backhand_counts,
-    'win'
-    )
-csv_generation(
-    output_path_name,
-    overall_loser_forehand_counts,
-    overall_loser_backhand_counts,
-    'lose'
-)
+if __name__ == "__main__":
+    main()

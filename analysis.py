@@ -4,3 +4,5 @@ import glob
 
 files = glob.glob('./personal_data/*.csv')
 
+def analysis(professional_df, personal_df):
+    pass
