@@ -12,7 +12,7 @@ OUTPUT_DIR = Path("processed_data")
 
 TRANSLATION = {
     '放小球': 'net shot',
-    '擋小球': 'net net',
+    '擋小球': 'net shot',
     '殺球': 'smash',
     '點扣': 'smash',
     '挑球': 'lift',
