@@ -5,37 +5,32 @@ for elite male and female singles badminton players from ShuttleSet match data.
 
 import argparse
 from pathlib import Path
-
 import pandas as pd
 
 RAW_DATA_DIR = Path("raw_data")
-OUTPUT_DIR = Path("processed_data_v2")
+OUTPUT_DIR = Path("processed_data")
 
-# Maps Chinese shot type labels from ShuttleSet to English equivalents
 TRANSLATION = {
     '放小球': 'net shot',
-    '擋小球': 'return net',
+    '擋小球': 'net net',
     '殺球': 'smash',
-    '點扣': 'wrist smash',
+    '點扣': 'smash',
     '挑球': 'lift',
-    '防守回挑': 'defensive return lob',
+    '防守回挑': 'lift',
     '長球': 'clear',
     '平球': 'drive',
-    '小平球': 'driven flight',
-    '後場抽平球': 'back-court drive',
+    '小平球': 'drive',
+    '後場抽平球': 'drive',
     '切球': 'drop',
-    '過度切球': 'passive drop',
+    '過度切球': 'drop',
     '推球': 'push',
-    '撲球': 'rush',
-    '防守回抽': 'defensive return drive',
-    '勾球': 'cross-court net shot',
+    '撲球': 'push',
+    '防守回抽': 'drive',
+    '勾球': 'net shot',
     '發短球': 'short service',
     '發長球': 'long service',
     '未知球種': 'unnamed shot',
 }
-
-WIN_LOSE = {'A': 'Winner', 'B': 'Loser'}
-
 
 def data_cleaning(df: pd.DataFrame) -> pd.DataFrame:
     """Filters, translates, and formats raw match data for analysis.
@@ -57,7 +52,7 @@ def data_cleaning(df: pd.DataFrame) -> pd.DataFrame:
               backhand side, False otherwise.
     """
     df = df[['player', 'type', 'backhand']].copy()
-    df['player'] = df['player'].replace(WIN_LOSE)
+    df['player'] = df['player'].replace({'A': 'Winner', 'B': 'Loser'})
     df['type'] = df['type'].replace(TRANSLATION)
     df['backhand'] = df['backhand'].fillna(0).astype(bool)
 
@@ -128,12 +123,11 @@ def csv_generation(output_stem: str, forehand_counts: dict, backhand_counts: dic
         rows.append({
             'shot type': shot,
             'count': shot_total,
-            'overall frequency (%)': 100 * shot_total / total if total else 0,
-
             'forehand (count)': forehand,
-            'forehand ratio (%)': 100 * forehand / shot_total if shot_total else 0,
-
             'backhand (count)': backhand,
+            
+            'overall frequency (%)': 100 * shot_total / total if total else 0,
+            'forehand ratio (%)': 100 * forehand / shot_total if shot_total else 0,
             'backhand ratio (%)': 100 * backhand / shot_total if shot_total else 0,
         })
 
@@ -191,6 +185,27 @@ def main() -> None:
 
     process_group([str(f) for f in files], gender)
 
+# TRANSLATION_VER_B = {
+#     '放小球': 'net shot',
+#     '擋小球': 'return net',
+#     '殺球': 'smash',
+#     '點扣': 'wrist smash',
+#     '挑球': 'lift',
+#     '防守回挑': 'defensive return lob',
+#     '長球': 'clear',
+#     '平球': 'drive',
+#     '小平球': 'driven flight',
+#     '後場抽平球': 'back-court drive',
+#     '切球': 'drop',
+#     '過度切球': 'passive drop',
+#     '推球': 'push',
+#     '撲球': 'rush',
+#     '防守回抽': 'defensive return drive',
+#     '勾球': 'cross-court net shot',
+#     '發短球': 'short service',
+#     '發長球': 'long service',
+#     '未知球種': 'unnamed shot'
+# }
 
 if __name__ == "__main__":
     main()
