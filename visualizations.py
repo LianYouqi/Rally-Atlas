@@ -26,12 +26,6 @@ BAR_CUSTOMIZATIONS = {
     'linewidth': 0.6,
 }
 
-STAT_LABELS = {
-    ('count', 'overall frequency (%)'): 'shot types',
-    ('forehand (count)', 'forehand ratio (%)'): 'forehand plays',
-    ('backhand (count)', 'backhand ratio (%)'): 'backhand plays',
-}
-
 SAMPLE_OPTIONS = {
     '1': ('male (win)', 'male_win'),
     '2': ('male (lose)', 'male_lose'),
@@ -39,10 +33,16 @@ SAMPLE_OPTIONS = {
     '4': ('female (lose)', 'female_lose'),
 }
 
+STAT_LABELS = {
+    ('count', 'overall frequency'): 'shot types',
+    ('forehand', 'forehand ratio'): 'forehand plays',
+    ('backhand', 'backhand ratio'): 'backhand plays',
+}
+
 STATISTIC_OPTIONS = {
-    '1': ('count', 'overall frequency (%)'),
-    '2': ('forehand (count)', 'forehand ratio (%)'),
-    '3': ('backhand (count)', 'backhand ratio (%)'),
+    '1': ('count', 'overall frequency'),
+    '2': ('forehand', 'forehand ratio'),
+    '3': ('backhand', 'backhand ratio'),
 }
 
 def _draw_bar_chart(ax: plt.Axes, df_sorted: pd.DataFrame, metric: str, title: str) -> None:
@@ -56,9 +56,6 @@ def _draw_bar_chart(ax: plt.Axes, df_sorted: pd.DataFrame, metric: str, title: s
 
     max_val = df_sorted[metric].max()
     if max_val > 0:
-        # Highlight whichever bar is actually largest, rather than assuming
-        # the data is sorted ascending (plot_personal_vs_elite deliberately
-        # isn't, so it can line panels up by shot type instead).
         bars[df_sorted[metric].values.argmax()].set_color(SMASH_RED)
 
     for bar, (_, row) in zip(bars, df_sorted.iterrows()):
@@ -66,7 +63,7 @@ def _draw_bar_chart(ax: plt.Axes, df_sorted: pd.DataFrame, metric: str, title: s
         ax.text(
             width + max_val * 0.01,
             bar.get_y() + bar.get_height() / 2,
-            f'{int(row["count"]):,}  ({row["overall frequency (%)"]:.1f}%)',
+            f'{int(row["count"]):,}  ({row["overall frequency"] * 100:.1f}%)',
             va='center', ha='left',
             fontsize=8, color=TEXT,
         )

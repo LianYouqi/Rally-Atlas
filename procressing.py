@@ -123,12 +123,12 @@ def csv_generation(output_stem: str, forehand_counts: dict, backhand_counts: dic
         rows.append({
             'shot type': shot,
             'count': shot_total,
-            'forehand (count)': forehand,
-            'backhand (count)': backhand,
+            'forehand': forehand,
+            'backhand': backhand,
             
-            'overall frequency (%)': 100 * shot_total / total if total else 0,
-            'forehand ratio (%)': 100 * forehand / shot_total if shot_total else 0,
-            'backhand ratio (%)': 100 * backhand / shot_total if shot_total else 0,
+            'overall frequency': shot_total / total if total else 0,
+            'forehand ratio': forehand / shot_total if shot_total else 0,
+            'backhand ratio': backhand / shot_total if shot_total else 0,
         })
 
     summary = pd.DataFrame(rows).set_index('shot type')
