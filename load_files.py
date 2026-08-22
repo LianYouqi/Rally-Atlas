@@ -20,9 +20,7 @@ def load_personal_sample() -> pd.DataFrame:
     Must share the schema produced by csv_generation() in
     shot_distribution_analysis.py: indexed by 'shot type', with 'count',
     'overall frequency (%)', 'forehand (count)', 'forehand ratio (%)',
-    'backhand (count)', and 'backhand ratio (%)' columns. Shot types you
-    haven't logged yet can simply be omitted — plot_personal_vs_elite fills
-    them in as zero.
+    'backhand (count)', and 'backhand ratio (%)' columns. 
     """
     if not PERSONAL_DATA_PATH.exists():
         raise FileNotFoundError(
