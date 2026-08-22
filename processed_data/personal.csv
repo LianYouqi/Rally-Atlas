@@ -1,4 +1,4 @@
-shot type,count,overall frequency (%),forehand (count),forehand ratio (%),backhand (count),backhand ratio (%)
+shot type,count,overall frequency,forehand,forehand ratio,backhand,backhand ratio
 net shot,4777,0.1835542747,1944,0.4069499686,2833,0.5930500314
 lift,3509,0.1348318924,3259,0.9287546309,250,0.07124536905
 return net,3251,0.1249183477,299,0.09197170102,2952,0.908028299
