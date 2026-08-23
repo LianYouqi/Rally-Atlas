@@ -43,9 +43,37 @@ def analyze_personal_to_elite() -> dict[str, list[float]]:
     return results
 
 def summary():
-    pass
+    results = analyze_personal_to_elite()
+
+    df = pd.DataFrame.from_dict(results, orient='index', columns=FEATURE_COLS)
+    df.index.name = 'your sample'
+    df = df.sort_values(by=FEATURE_COLS[0], ascending=False)
+    print("=" * 50)
+    print("Unformated Results")
+    print("=" * 50)
+    print(df.to_string())
+
+    print("\n" + "=" * 50)
+    print("Personal Gameplay vs. Elite Player Comparison")
+    print("=" * 50)
+
+    for csv_name, scores in results.items():
+        label = csv_name.replace('_', ' ').title()
+        print(f"\n{label}")
+        print("-" * len(label))
+        for feature, score in zip(FEATURE_COLS, scores):
+            print(f"  {feature:<20} similarity: {score:.4f}")
+
+    print("\n" + "=" * 50)
+    print("Closest Matches")
+    print("=" * 50)
+    for i, feature in enumerate(FEATURE_COLS):
+        best_match = max(results, key=lambda k: results[k][i])
+        best_score = results[best_match][i]
+        print(f"  {feature:<20} -> {best_match.replace('_', ' ').title()} ({best_score:.4f})")
+
 
 def main():
     pass
 
-print(analyze_personal_to_elite())
+summary()
