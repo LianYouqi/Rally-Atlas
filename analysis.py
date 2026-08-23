@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 PROCESSED_DIR = Path('processed_data')
 files = [f.stem for f in PROCESSED_DIR.glob('*.csv') if f.stem != 'personal']
-COL_OVERALL_FREQ, COL_FH_RATIO, COL_BH_RATIO = ['overall frequency', 'forehand ratio', 'backhand ratio']
+FEATURE_COLS = ['overall frequency', 'forehand ratio', 'backhand ratio']
 
 def build_feature_vector(df: pd.DataFrame, feature_col: str) -> pd.DataFrame:
     """one frequency value per shot type, indexed by shot type name"""
@@ -27,25 +27,25 @@ def cosine_similiarity(a,b):
 
 def compute_cos_sim(elite_vec: pd.DataFrame, personal_vec: pd.DataFrame) -> np.float64:
     elite_values, personal_values = align_vectors(elite_vec, personal_vec)
-    return cosine_similiarity(elite_values, personal_values)
+    return float(cosine_similiarity(elite_values, personal_values))
 
+def analyze_personal_to_elite() -> dict[str, list[float]]:
+    personal_df = load_personal_sample()
+    personal_vecs = {col: build_feature_vector(personal_df, col) for col in FEATURE_COLS}
 
-personal_df = load_personal_sample()
-personal_overall_freq = build_feature_vector(personal_df, COL_OVERALL_FREQ)
-personal_fh_ratio = build_feature_vector(personal_df, COL_FH_RATIO)
-personal_bh_ratio = build_feature_vector(personal_df, COL_BH_RATIO)
+    results = {}
+    for csv_name in files:
+        df = load_sample(csv_name)
+        results[csv_name] = [
+            compute_cos_sim(build_feature_vector(df, col), personal_vecs[col])
+            for col in FEATURE_COLS
+        ]
+    return results
 
-results = {}
+def summary():
+    pass
 
-for csv_name in files:
-    df = load_sample(csv_name)
+def main():
+    pass
 
-    overall_freq =  build_feature_vector(df, COL_OVERALL_FREQ)
-    fh_ratio = build_feature_vector(df, COL_FH_RATIO)
-    bh_ratio = build_feature_vector(df, COL_BH_RATIO)
-
-    overall_freq_sim = compute_cos_sim(overall_freq, personal_overall_freq)
-    fh_ratio_sim = compute_cos_sim(fh_ratio, personal_fh_ratio)
-    bh_ratio_sim = compute_cos_sim(bh_ratio,personal_bh_ratio)
-
-    results[csv_name] = [overall_freq_sim,fh_ratio_sim,bh_ratio_sim]
+print(analyze_personal_to_elite())
