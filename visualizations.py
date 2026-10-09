@@ -1,17 +1,13 @@
 """
 Plots shot-type distributions (count, frequency, forehand/backhand ratio)
 for elite male and female singles badminton players, using the summary
-CSVs produced by shot_distribution_analysis.py.
+CSVs produced by procressing.py.
 """
 
 from load_files import load_sample, load_personal_sample
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
-
-DATA_DIR = Path('processed_data')
-PERSONAL_DATA_PATH = DATA_DIR / 'personal.csv'
 
 COURT_TEAL = '#1B998B'
 SMASH_RED = '#E84855'
@@ -86,7 +82,7 @@ def plot_elite_distribution(sample: tuple[str, pd.DataFrame], statistic: tuple[s
     Parameters:
         sample: (label, DataFrame) pair, e.g. ('male (win)', male_win_df).
                 DataFrame must contain the chosen metric column and
-                'overall frequency (%)' (for annotation).
+                'overall frequency' (for annotation).
         statistic: Tuple of two column names; only the first is used as the
                    metric to plot. Valid pairs are the keys of STATISTIC_OPTIONS.
 
